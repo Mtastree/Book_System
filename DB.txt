@@ -1,0 +1,69 @@
+USE library_db;
+
+用户表：
+CREATE TABLE readers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    openid VARCHAR(255) NOT NULL UNIQUE,
+    reader_card VARCHAR(20) NOT NULL COMMENT '读者证号',
+    reader_type VARCHAR(20) NOT NULL COMMENT '读者类型',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+全部书籍表：
+CREATE TABLE books (
+    序号 INT PRIMARY KEY,
+    MARC记录号 INT,
+    题名 VARCHAR(255),
+    责任者 VARCHAR(255),
+    索书号 VARCHAR(100),
+    财产号区间 VARCHAR(50),
+    条码号区间 VARCHAR(50),
+    标准号 VARCHAR(50),
+    出版社 VARCHAR(255),
+    出版年 VARCHAR(50),
+    册数 INT,
+    总价 DECIMAL(10, 2),
+    总实洋 DECIMAL(10, 2),
+    馆藏地 VARCHAR(255),
+    MARC状态 VARCHAR(50),
+    文献类型 VARCHAR(50),
+    源编时间 VARCHAR(50),
+    源编人 VARCHAR(50),
+    更新时间 VARCHAR(50),
+    更新人 VARCHAR(50),
+    简介 TEXT
+);
+推荐历史表：
+CREATE TABLE IF NOT EXISTS recommend_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reader_id VARCHAR(50) NOT NULL,
+    book_call_no VARCHAR(100) NOT NULL,
+    book_title VARCHAR(255) NOT NULL,
+    book_author VARCHAR(255),
+    book_publisher VARCHAR(255),
+    book_isbn VARCHAR(255),
+    recommend_time DATETIME NOT NULL,
+    INDEX idx_reader_id (reader_id),
+    INDEX idx_recommend_time (recommend_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- 感悟表
+CREATE TABLE reflections (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content TEXT NOT NULL COMMENT '感悟内容',
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
+    book_id INT NOT NULL COMMENT '关联的书籍序号',
+    reader_id INT NOT NULL COMMENT '发布的读者ID',
+    FOREIGN KEY (book_id) REFERENCES books(序号) ON DELETE CASCADE,
+    FOREIGN KEY (reader_id) REFERENCES readers(id) ON DELETE CASCADE
+);
+
+-- 点赞记录表
+CREATE TABLE likes (
+    reader_id INT NOT NULL COMMENT '点赞的读者ID',
+    reflection_id INT NOT NULL COMMENT '被点赞的感悟ID',
+    PRIMARY KEY (reader_id, reflection_id),
+    FOREIGN KEY (reader_id) REFERENCES readers(id) ON DELETE CASCADE,
+    FOREIGN KEY (reflection_id) REFERENCES reflections(id) ON DELETE CASCADE
+);

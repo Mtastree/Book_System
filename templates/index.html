@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>书籍感悟首页</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* 仅保留少量自定义样式 */
+    .book-cover {
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      border-radius: .65rem;
+      background-color: #f8f9fa;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      transition: all .2s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+<!-- 粘性导航 -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">📚 书籍感悟</a>
+
+    <!-- Toggler -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('reflections_square') }}">感悟广场</a>
+            </li>
+        <li class="nav-item">
+          {% if current_reader %}
+            <!-- 如果用户已登录，显示其读者证号并链接到我的主页 -->
+            <a class="nav-link text-muted" href="{{ url_for('my_page') }}">
+              你好，{{ current_reader.nickname or current_reader.reader_card }}
+            </a>
+          {% else %}
+            <!-- 如果用户未登录，可以显示一个通用提示 -->
+            <span class="nav-link text-muted">
+              访客模式
+            </span>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <!-- 搜索 -->
+  <form class="row justify-content-center mb-4" method="get" action="/">
+    <div class="col-12 col-md-6">
+      <div class="input-group">
+        <input type="text" class="form-control" name="q" placeholder="按书名搜索…" value="{{ query }}">
+        <button class="btn btn-primary" type="submit">搜索</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- 书籍网格 -->
+  <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+    {% for book in books %}
+    <div class="col">
+      <a href="{{ url_for('book_detail', book_id=book.序号) }}" class="text-decoration-none">
+        <div class="card h-100 card-hover shadow-sm">
+          <!-- 封面占位 -->
+          {% if book.cover_path and book.cover_path != '未找到书籍链接' %}
+            <!-- 如果有封面路径，并且内容不是无效文本 -->
+            <img src="{{ url_for('static', filename=book.cover_path.replace('\\', '/')) }}"
+                 class="card-img-top book-cover" alt="{{ book.题名 }} 封面">
+          {% else %}
+            <!-- 否则，显示占位图 -->
+            <img src="https://via.placeholder.com/300x450/f8f9fa/6c757d?text={{ book.题名|urlencode }}"
+                 class="card-img-top book-cover" alt="暂无封面">
+          {% endif %}
+          <div class="card-body">
+            <h6 class="card-title fw-semibold mb-1">{{ book.题名 }}</h6>
+            <p class="card-text text-muted small mb-0">{{ book.责任者 }}</p>
+            <p class="text-muted small">{{ book.出版社 }}</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+
+  <!-- 分页 -->
+  {% if total_pages > 1 %}
+  <div class="mt-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+      <small class="text-muted">第 {{ page }} 页 / 共 {{ total_pages }} 页</small>
+
+      <form class="d-flex gap-2" method="get" action="/">
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        <input type="number" min="1" max="{{ total_pages }}" name="page"
+               class="form-control form-control-sm" style="width:70px" placeholder="页码">
+        <button type="submit" class="btn btn-sm btn-outline-primary">跳转</button>
+      </form>
+    </div>
+
+    <nav aria-label="分页">
+      <ul class="pagination justify-content-center flex-wrap">
+        {% if page > 1 %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page - 1 }}{% if query %}&q={{ query }}{% endif %}">«</a>
+          </li>
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+          <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}">{{ p }}</a>
+          </li>
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page + 1 }}{% if query %}&q={{ query }}{% endif %}">»</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</main>
+
+<!-- Bootstrap JS Bundle（含 Popper） -->
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

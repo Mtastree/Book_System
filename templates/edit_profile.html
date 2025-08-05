@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>编辑个人资料</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">编辑个人资料</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('edit_profile') }}">
+                        <div class="mb-3">
+                            <label for="reader_card" class="form-label">读者证号</label>
+                            <input type="text" class="form-control" id="reader_card" value="{{ reader.reader_card }}" readonly disabled>
+                            <div class="form-text">读者证号不可修改。</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称</label>
+                            <input type="text" class="form-control" id="nickname" name="nickname" value="{{ reader.nickname or '' }}" required maxlength="50">
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="{{ url_for('my_page') }}" class="btn btn-secondary">返回</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

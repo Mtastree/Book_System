@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ book['题名'] }} - 书籍详情</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body class="bg-light">
+
+  <!-- 顶部导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="/">📚 首页</a>
+      <div class="ms-auto">
+        {% if current_reader %}
+          <!-- 如果用户已登录，显示其读者证号并链接到我的主页 -->
+          <span class="navbar-text text-muted small">
+            📌 <a href="{{ url_for('my_page') }}" class="text-decoration-none text-muted">
+                  {{ current_reader.nickname or current_reader.reader_card }}
+                </a>
+          </span>
+        {% else %}
+          <!-- 如果用户未登录，可以显示一个登录提示 -->
+          <span class="navbar-text text-muted small">
+            请从微信菜单进入以登录
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+    <!-- 主体内容 -->
+      <div class="container-sm my-4">
+        <!-- 书籍信息 -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <div class="row g-4">
+              <!-- 左侧：封面 -->
+              <div class="col-md-4 text-center">
+                {% if book.cover_path and book.cover_path != '未找到书籍链接' %}
+                  <img src="{{ url_for('static', filename=book.cover_path.replace('\\', '/')) }}"
+                       class="img-fluid rounded shadow-sm" alt="{{ book.题名 }} 封面" style="max-height: 400px;">
+                {% else %}
+                  <img src="https://via.placeholder.com/300x450/f8f9fa/6c757d?text={{ book.题名|urlencode }}"
+                       class="img-fluid rounded" alt="暂无封面" style="max-height: 400px;">
+                {% endif %}
+              </div>
+
+              <!-- 右侧：书籍信息 -->
+              <div class="col-md-8">
+                <h4 class="card-title mb-3">{{ book.题名 }}</h4>
+                <p><strong>作者：</strong>{{ book.责任者 }}</p>
+                <p><strong>出版社：</strong>{{ book.出版社 }}（{{ book.出版年 }}）</p>
+                <p><strong>索书号：</strong>{{ book.索书号 }}</p>
+                <p><strong>馆藏地：</strong>{{ book.馆藏地 }}</p>
+                <hr>
+                <p><strong>简介：</strong>{{ book.简介 }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    <!-- 发布感悟 -->
+    {% if current_reader %}
+      <!-- 只有登录用户才能看到发布感悟的表单 -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title mb-3">📝 发布感悟</h5>
+          <form method="post" action="{{ url_for('post_reflection') }}">
+            <input type="hidden" name="book_id" value="{{ book['序号'] }}">
+            <!-- 动态设置 reader_card -->
+            <input type="hidden" name="reader_card" value="{{ current_reader.reader_card }}">
+            <div class="mb-3">
+              <textarea class="form-control" name="content" rows="3" placeholder="请输入你的感悟..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">发布</button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 推荐书籍 -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">📚 推荐书籍（同作者）</h5>
+            {% if recommendations %}
+              <ul class="list-group list-group-flush">
+                {% for rec in recommendations %}
+                  <li class="list-group-item">
+                    <a href="{{ url_for('book_detail', book_id=rec['序号']) }}" class="text-decoration-none">{{ rec['题名'] }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">暂无推荐。</p>
+            {% endif %}
+          </div>
+        </div>
+
+    <!-- 感悟列表 -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-3">💬 感悟分享</h5>
+        {% if reflections %}
+          {% for r in reflections %}
+            <div class="border-bottom pb-3 mb-3">
+              <p class="mb-1">{{ r.content }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                  <!-- 使用 or 语法优先显示昵称 -->
+                  👤 {{ r.nickname or r.reader_card }}<br>
+                  🕒 {{ r.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                <div> <!-- 使用一个 div 包裹按钮 -->
+                  {% if current_reader %}
+                    <!-- 点赞按钮 -->
+                    <button class="btn btn-outline-primary btn-sm like-btn" data-id="{{ r.reflection_id }}">
+                      👍 <span>{{ r.likes }}</span>
+                    </button>
+                  {% else %}
+                     <!-- 未登录用户只显示点赞数 -->
+                    <span class="text-muted">👍 {{ r.likes }}</span>
+                  {% endif %}
+                   <!-- 新增：管理员删除按钮 -->
+                  {% if current_reader and current_reader.is_admin %}
+                    <form method="POST" action="{{ url_for('delete_reflection', reflection_id=r.reflection_id) }}" style="display: inline-block; margin-left: 5px;">
+                      <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('确定要隐藏这条感悟吗？');" title="隐藏此条感悟">
+                        🗑️
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">还没有人发表感悟。</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if current_reader %}
+    <!-- 只有登录用户才需要点赞的 JS 功能 -->
+    <script>
+      $(document).ready(function () {
+        // 将 reader_card 作为一个 JS 变量，方便使用
+        const currentUserCard = "{{ current_reader.reader_card }}";
+
+        $('.like-btn').click(function () {
+          const btn = $(this);
+          const reflectionId = btn.data('id');
+          $.post('/like', {
+            reflection_id: reflectionId,
+            // 动态传入当前用户的 reader_card
+            reader_card: currentUserCard
+          }, function (data) {
+            if (data.likes !== undefined) {
+              btn.find('span').text(data.likes);
+            }
+          });
+        });
+      });
+    </script>
+  {% endif %}
+  <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

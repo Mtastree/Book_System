@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>感悟广场</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <!-- 引入 jQuery，点赞功能需要它 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body class="bg-light">
+
+<!-- 导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">📚 首页</a>
+    <div class="ms-auto">
+        <a class="nav-link text-muted" href="{{ url_for('my_page') }}">
+          你好，{{ current_reader.nickname or current_reader.reader_card }}
+        </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <h2 class="text-center mb-4">感悟广场</h2>
+
+  <!-- 感悟列表 -->
+  <div class="list-group mb-4">
+    {% if reflections %}
+      {% for r in reflections %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">《{{ r.book_title }}》</h5>
+            <small class="text-muted">{{ r.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+          </div>
+          <p class="mb-1">{{ r.content }}</p>
+
+          <!-- 新增：发布者信息和点赞按钮 -->
+          <div class="d-flex align-items-center mt-2"> <!-- 移除了 justify-content-between -->
+            <small class="text-muted">发布者: {{ r.nickname or r.reader_card }}</small>
+
+            <div class="ms-auto">
+            <!-- 点赞按钮 -->
+              <button class="btn btn-outline-primary btn-sm like-btn"
+                      data-id="{{ r.reflection_id }}"
+                      aria-label="点赞">
+                <i class="bi bi-hand-thumbs-up"></i>
+                <span>{{ r.likes_count }}</span>
+              </button>
+              {% if current_reader and current_reader.is_admin %}
+                <form method="POST" action="{{ url_for('delete_reflection', reflection_id=r.reflection_id) }}" style="display: inline-block; margin-left: 5px;">
+                  <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('确定要隐藏这条感悟吗？');" title="隐藏此条感悟">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted">还没有人发表感悟，快来抢占第一个吧！</p>
+    {% endif %}
+  </div>
+
+  <!-- 分页 -->
+  {% if total_pages > 1 %}
+    <nav aria-label="分页">
+      <ul class="pagination justify-content-center flex-wrap">
+        {% if page > 1 %}
+          <li class="page-item"><a class="page-link" href="?page={{ page - 1 }}">«</a></li>
+        {% endif %}
+        {% for p in range(start_page, end_page + 1) %}
+          <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+        {% if page < total_pages %}
+          <li class="page-item"><a class="page-link" href="?page={{ page + 1 }}">»</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+  <!-- 分隔线 -->
+  <hr class="my-5">
+
+  <!-- 发布模块 -->
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="bi bi-pencil-square"></i> 发布我的感悟</h5>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('reflections_square') }}">
+        <div class="mb-3">
+          <label for="book_title" class="form-label">书籍名称</label>
+          <input type="text" class="form-control" id="book_title" name="book_title" placeholder="请输入完整的书籍名称" required>
+        </div>
+        <div class="mb-3">
+          <label for="content" class="form-label">感悟内容</label>
+          <textarea class="form-control" id="content" name="content" rows="4" placeholder="分享你的思考与感悟..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">立即发布</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- 点赞功能的 JavaScript -->
+<script>
+$(document).ready(function() {
+  // 从后端模板获取当前登录用户的读者证号
+  const currentUserCard = "{{ current_reader.reader_card if current_reader else '' }}";
+
+  // 如果用户未登录，则不绑定点赞事件
+  if (!currentUserCard) {
+    $('.like-btn').prop('disabled', true); // 禁用按钮
+    return;
+  }
+
+  $('.like-btn').on('click', function() {
+    const btn = $(this);
+    const reflectionId = btn.data('id'); // 获取感悟ID
+
+    // 发送 POST 请求到 /like 路由
+    $.post("{{ url_for('like_reflection') }}", {
+      reflection_id: reflectionId,
+      reader_card: currentUserCard
+    })
+    .done(function(data) {
+      // 请求成功后，更新按钮上显示的数字
+      if (data.likes !== undefined) {
+        btn.find('span').text(data.likes);
+        // 可以给用户一个视觉反馈，比如按钮变色
+        btn.removeClass('btn-outline-primary').addClass('btn-primary');
+      }
+    })
+    .fail(function() {
+      // 处理请求失败的情况
+      alert('点赞失败，请稍后重试。');
+    });
+  });
+});
+</script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

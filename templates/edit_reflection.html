@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>编辑感悟</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0">编辑感悟</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-muted mb-3">《{{ reflection.book_title }}》</h5>
+                    <form method="POST" action="{{ url_for('edit_reflection', reflection_id=reflection.id) }}">
+                        <div class="mb-3">
+                            <label for="content" class="form-label">感悟内容</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" required>{{ reflection.content }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                        <a href="{{ url_for('my_page') }}" class="btn btn-secondary">取消</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
