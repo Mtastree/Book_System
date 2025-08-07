@@ -115,4 +115,5 @@ def get_reading_history(reader_id, id_type=0, max_pages=1, page_size=10):
 
 # if __name__ == '__main__':
 
-#     get_reading_history("2014120020")
+#     get_reading_history("")
+
