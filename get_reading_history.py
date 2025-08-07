@@ -40,8 +40,8 @@ def get_reading_history(reader_id, id_type=0, max_pages=1, page_size=10):
     """
     # 从环境变量获取配置
     BASE_URL = os.getenv('HW_BASE_URL', "https://libopac.nwafu.edu.cn/meta-local/api")
-    APP_ID = os.getenv('HW_APP_ID', "JNDTBtWlPcpHmH0oTwas8gLDrATM0qvt")
-    APP_KEY = os.getenv('HW_APP_KEY', "T7OiOLCO1WDJDsMtcajy4DJrU7o745lO")
+    APP_ID = os.getenv('HW_APP_ID', "")
+    APP_KEY = os.getenv('HW_APP_KEY', "")
 
     all_loans = []
     current_page = 1
@@ -114,4 +114,5 @@ def get_reading_history(reader_id, id_type=0, max_pages=1, page_size=10):
 
 
 # if __name__ == '__main__':
+
 #     get_reading_history("2014120020")
