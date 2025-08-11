@@ -11,26 +11,26 @@ CREATE TABLE readers (
 );
 全部书籍表：
 CREATE TABLE books (
-    序号 INT PRIMARY KEY,
-    MARC记录号 INT,
-    题名 VARCHAR(255),
-    责任者 VARCHAR(255),
-    索书号 VARCHAR(100),
-    财产号区间 VARCHAR(50),
-    条码号区间 VARCHAR(50),
-    标准号 VARCHAR(50),
-    出版社 VARCHAR(255),
-    出版年 VARCHAR(50),
-    册数 INT,
-    总价 DECIMAL(10, 2),
-    总实洋 DECIMAL(10, 2),
-    馆藏地 VARCHAR(255),
-    MARC状态 VARCHAR(50),
-    文献类型 VARCHAR(50),
-    源编时间 VARCHAR(50),
-    源编人 VARCHAR(50),
-    更新时间 VARCHAR(50),
-    更新人 VARCHAR(50),
+    id INT PRIMARY KEY,
+    marc_rec_no INT,
+    title VARCHAR(255),
+    author VARCHAR(255),
+    call_number VARCHAR(100),
+    asset_number_range VARCHAR(50),
+    barcode_range VARCHAR(50),
+    isbn VARCHAR(50),
+    publisher VARCHAR(255),
+    publish_year VARCHAR(50),
+    volume_count INT,
+    total_price DECIMAL(10, 2),
+    total_actual_price DECIMAL(10, 2),
+    location VARCHAR(255),
+    marc_status VARCHAR(50),
+    document_type VARCHAR(50),
+    source_created_at VARCHAR(50),
+    source_created_by VARCHAR(50),
+    updated_at VARCHAR(50),
+    updated_by VARCHAR(50),
     简介 TEXT
 );
 推荐历史表：
@@ -67,3 +67,4 @@ CREATE TABLE likes (
     FOREIGN KEY (reader_id) REFERENCES readers(id) ON DELETE CASCADE,
     FOREIGN KEY (reflection_id) REFERENCES reflections(id) ON DELETE CASCADE
 );
+
